@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Lock, Unlock, CheckCircle, Timer } from 'lucide-react';
 import { AdCardProps } from '../types';
 
+// Keep track of which ad was clicked last
+let lastClickedAdId: number | null = null;
+
 export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProps) {
   const [isViewing, setIsViewing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3);
@@ -14,8 +17,9 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
     const handleVisibilityChange = () => {
       if (document.hidden) {
         setHasVisitedAd(true);
-      } else if (!document.hidden && hasVisitedAd && !isUnlocked) {
+      } else if (!document.hidden && hasVisitedAd && !isUnlocked && lastClickedAdId === id) {
         setIsViewing(true);
+        lastClickedAdId = null; // Reset after starting the timer
       }
     };
 
@@ -23,7 +27,7 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [hasVisitedAd, isUnlocked]);
+  }, [hasVisitedAd, isUnlocked, id]);
 
   // Timer effect
   useEffect(() => {
@@ -87,6 +91,7 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
     if (!isUnlocked && !hasVisitedAd) {
       setTimeLeft(3);
       setIsViewing(false);
+      lastClickedAdId = id; // Set the last clicked ad ID
       
       try {
         window.open('https://example.com', '_blank')?.focus();
