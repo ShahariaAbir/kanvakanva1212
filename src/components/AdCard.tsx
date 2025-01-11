@@ -2,24 +2,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Lock, Unlock, CheckCircle, Timer } from 'lucide-react';
 import { AdCardProps } from '../types';
 
-// Keep track of which ad was clicked last
-let lastClickedAdId: number | null = null;
-
 export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProps) {
   const [isViewing, setIsViewing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3);
   const [hasVisitedAd, setHasVisitedAd] = useState(false);
   const adContainerRef = useRef<HTMLDivElement>(null);
   const scriptRef = useRef<HTMLScriptElement | null>(null);
+  const adIdRef = useRef<number | null>(null);
 
   // Handle visibility change
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden) {
+      if (document.hidden && adIdRef.current === id) {
         setHasVisitedAd(true);
-      } else if (!document.hidden && hasVisitedAd && !isUnlocked && lastClickedAdId === id) {
+      } else if (!document.hidden && hasVisitedAd && !isUnlocked && adIdRef.current === id) {
         setIsViewing(true);
-        lastClickedAdId = null; // Reset after starting the timer
+        adIdRef.current = null;
       }
     };
 
@@ -43,6 +41,7 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
       setIsViewing(false);
       setTimeLeft(3);
       setHasVisitedAd(false);
+      adIdRef.current = null;
     }
 
     return () => {
@@ -50,24 +49,13 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
     };
   }, [isViewing, timeLeft, isUnlocked, id, onUnlock]);
 
-  // Clean up script on unmount
-  useEffect(() => {
-    return () => {
-      if (scriptRef.current) {
-        scriptRef.current.remove();
-        scriptRef.current = null;
-      }
-    };
-  }, []);
-
-  // Ad injection effect with error handling
+  // Ad injection effect
   useEffect(() => {
     if (!adContainerRef.current) return;
 
     try {
       if (scriptRef.current) {
         scriptRef.current.remove();
-        scriptRef.current = null;
       }
 
       adContainerRef.current.innerHTML = '';
@@ -76,10 +64,6 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
       script.textContent = adScript;
       script.async = true;
       
-      script.onerror = (error) => {
-        console.error('Ad script failed to load:', error);
-      };
-
       scriptRef.current = script;
       adContainerRef.current.appendChild(script);
     } catch (error) {
@@ -88,10 +72,10 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
   }, [adScript]);
 
   const handleClick = () => {
-    if (!isUnlocked && !hasVisitedAd) {
+    if (!isUnlocked && !isViewing) {
       setTimeLeft(3);
       setIsViewing(false);
-      lastClickedAdId = id; // Set the last clicked ad ID
+      adIdRef.current = id;
       
       try {
         window.open('https://example.com', '_blank')?.focus();
