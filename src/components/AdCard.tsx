@@ -7,15 +7,15 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
   const [timeLeft, setTimeLeft] = useState(3);
   const [hasVisitedAd, setHasVisitedAd] = useState(false);
   const adContainerRef = useRef<HTMLDivElement>(null);
+  const scriptRef = useRef<HTMLScriptElement | null>(null);
+  const currentAdRef = useRef<number | null>(null);
 
   // Handle visibility change
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // User left the page
+      if (document.hidden && currentAdRef.current === id) {
         setHasVisitedAd(true);
-      } else if (hasVisitedAd && !isUnlocked) {
-        // User returned and ad isn't unlocked yet
+      } else if (!document.hidden && hasVisitedAd && !isUnlocked && currentAdRef.current === id) {
         setIsViewing(true);
         setTimeLeft(3);
       }
@@ -24,23 +24,27 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (currentAdRef.current === id) {
+        currentAdRef.current = null;
+      }
     };
-  }, [hasVisitedAd, isUnlocked]);
+  }, [hasVisitedAd, isUnlocked, id]);
 
   // Timer effect
   useEffect(() => {
     let timer: number;
-    if (isViewing && !isUnlocked && timeLeft > 0) {
+    if (isViewing && !isUnlocked && timeLeft > 0 && currentAdRef.current === id) {
       timer = window.setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
     }
 
-    if (timeLeft === 0 && !isUnlocked) {
+    if (timeLeft === 0 && !isUnlocked && currentAdRef.current === id) {
       onUnlock(id);
       setIsViewing(false);
       setTimeLeft(3);
       setHasVisitedAd(false);
+      currentAdRef.current = null;
     }
 
     return () => {
@@ -48,28 +52,55 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
     };
   }, [isViewing, timeLeft, isUnlocked, id, onUnlock]);
 
-  // Ad injection effect
+  // Clean up script on unmount
   useEffect(() => {
-    if (adContainerRef.current) {
+    return () => {
+      if (scriptRef.current) {
+        scriptRef.current.remove();
+        scriptRef.current = null;
+      }
+    };
+  }, []);
+
+  // Ad injection effect with error handling
+  useEffect(() => {
+    if (!adContainerRef.current) return;
+
+    try {
+      if (scriptRef.current) {
+        scriptRef.current.remove();
+        scriptRef.current = null;
+      }
+
       adContainerRef.current.innerHTML = '';
+      
       const script = document.createElement('script');
       script.textContent = adScript;
+      script.async = true;
+      
+      script.onerror = (error) => {
+        console.error('Ad script failed to load:', error);
+      };
+
+      scriptRef.current = script;
       adContainerRef.current.appendChild(script);
+    } catch (error) {
+      console.error('Error injecting ad script:', error);
     }
   }, [adScript]);
 
   const handleClick = () => {
     if (!isUnlocked && !hasVisitedAd) {
-      // Reset states when clicking a new ad
       setIsViewing(false);
       setTimeLeft(3);
       setHasVisitedAd(false);
+      currentAdRef.current = id;
       
-      // Create a clickable area that opens in a new tab
-      const a = document.createElement('a');
-      a.href = 'https://example.com'; // Replace with actual ad URL
-      a.target = '_blank';
-      a.click();
+      try {
+        window.open('https://example.com', '_blank')?.focus();
+      } catch (error) {
+        console.error('Error opening ad link:', error);
+      }
     }
   };
 
@@ -92,7 +123,7 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
       <div className="aspect-video bg-white/5 rounded-lg flex items-center justify-center">
         <div className="relative w-full h-full">
           <div ref={adContainerRef} className="absolute inset-0" />
-          {!isUnlocked && isViewing && (
+          {!isUnlocked && isViewing && currentAdRef.current === id && (
             <div className="absolute inset-0 flex flex-col items-center justify-center space-y-2 bg-black/50">
               <Timer className="w-8 h-8 text-white animate-pulse" />
               <p className="text-white">Wait {timeLeft}s...</p>
@@ -104,9 +135,9 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
       <div className="mt-4 text-sm text-white/80">
         {isUnlocked ? (
           "Ad completed"
-        ) : isViewing ? (
+        ) : isViewing && currentAdRef.current === id ? (
           "Watching ad..."
-        ) : hasVisitedAd ? (
+        ) : hasVisitedAd && currentAdRef.current === id ? (
           "Welcome back! Wait for timer..."
         ) : (
           "Click to visit ad"
