@@ -3,10 +3,11 @@ import { Lock, Unlock, CheckCircle, Timer } from 'lucide-react';
 import { AdCardProps } from '../types';
 
 export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProps) {
-  const [isViewing, setIsViewing] = useState(false);
+  const [isViewing, setIsViewing] = useState(true); // Changed to true by default
   const [timeLeft, setTimeLeft] = useState(3);
   const adContainerRef = useRef<HTMLDivElement>(null);
 
+  // Timer effect
   useEffect(() => {
     let timer: number;
     if (isViewing && !isUnlocked && timeLeft > 0) {
@@ -25,8 +26,9 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
     };
   }, [isViewing, timeLeft, isUnlocked, id, onUnlock]);
 
+  // Ad injection effect
   useEffect(() => {
-    if (isViewing && adContainerRef.current) {
+    if (adContainerRef.current) {
       // Clear any existing content
       adContainerRef.current.innerHTML = '';
       
@@ -35,7 +37,7 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
       script.textContent = adScript;
       adContainerRef.current.appendChild(script);
     }
-  }, [isViewing, adScript]);
+  }, [adScript]); // Only depends on adScript now, since we show ads immediately
 
   const handleClick = () => {
     if (!isUnlocked) {
@@ -61,21 +63,19 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
       </div>
 
       <div className="aspect-video bg-white/5 rounded-lg flex items-center justify-center">
-        {isViewing ? (
-          <div className="relative w-full h-full">
-            <div ref={adContainerRef} className="absolute inset-0" />
+        <div className="relative w-full h-full">
+          <div ref={adContainerRef} className="absolute inset-0" />
+          {!isUnlocked && isViewing && (
             <div className="absolute inset-0 flex flex-col items-center justify-center space-y-2 bg-black/50">
               <Timer className="w-8 h-8 text-white animate-pulse" />
               <p className="text-white">Wait {timeLeft}s...</p>
             </div>
-          </div>
-        ) : (
-          <div className="text-white/60">Click to view ad</div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="mt-4 text-sm text-white/80">
-        {isUnlocked ? "Ad completed" : "Ad not yet completed"}
+        {isUnlocked ? "Ad completed" : "Watch ad to unlock"}
       </div>
     </div>
   );
