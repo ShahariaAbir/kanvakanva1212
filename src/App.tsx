@@ -5,12 +5,12 @@ import { AdCard as AdCardType } from './types';
 
 // Ad scripts configuration
 const AD_SCRIPTS = [
-  `(function(bymxi){
+  `(function(dzb){
 var d = document,
     s = d.createElement('script'),
     l = d.scripts[d.scripts.length - 1];
-s.settings = bymxi || {};
-s.src = "//luminoustry.com/b/X.VpsJdWG/l/0-YQWJd/iUYIWy5bu/ZvXWIJ/Jedmt9fu-ZeUPlYkaPgTvU/5zOqDOE/wnMzTDgEtONPT/k/4fMtTHAmxUOQQR";
+s.settings = dzb || {};
+s.src = "\/\/luminoustry.com\/b\/XyVEs.dpGXlk0BYOWOdUiyYlWw5CusZHXvIP\/_eQmd9lu\/ZpUAlwkZPETXY\/wzM\/DSctxUN\/D\/UWtCNAjrAIwhNkz\/Et0ENvgO";
 s.async = true;
 s.referrerPolicy = 'no-referrer-when-downgrade';
 l.parentNode.insertBefore(s, l);
