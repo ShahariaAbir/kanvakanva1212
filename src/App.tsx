@@ -57,13 +57,22 @@ l.parentNode.insertBefore(s, l);
 })({})`,
 ];
 
+const AD_NAMES = [
+  "Premium Gaming Offer",
+  "Special Travel Deals",
+  "Exclusive Shopping Discounts",
+  "Limited Time Tech Deals",
+  "VIP Entertainment Access"
+];
+
 function App() {
   const [ads, setAds] = useState<AdCardType[]>(() => {
     const saved = localStorage.getItem('adStates');
     return saved ? JSON.parse(saved) : Array.from({ length: 5 }, (_, i) => ({
       id: i + 1,
+      name: AD_NAMES[i],
       isUnlocked: false,
-      title: `Advertisement ${i + 1}`,
+      title: AD_NAMES[i],
       adScript: AD_SCRIPTS[i]
     }));
   });
@@ -98,6 +107,7 @@ function App() {
             <AdCard
               key={ad.id}
               id={ad.id}
+              name={ad.name}
               isUnlocked={ad.isUnlocked}
               title={ad.title}
               adScript={ad.adScript}
