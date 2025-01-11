@@ -3,9 +3,29 @@ import { Lock, Unlock, CheckCircle, Timer } from 'lucide-react';
 import { AdCardProps } from '../types';
 
 export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProps) {
-  const [isViewing, setIsViewing] = useState(false); // Changed to false by default
+  const [isViewing, setIsViewing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3);
+  const [hasVisitedAd, setHasVisitedAd] = useState(false);
   const adContainerRef = useRef<HTMLDivElement>(null);
+
+  // Handle visibility change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // User left the page
+        setHasVisitedAd(true);
+      } else if (hasVisitedAd && !isUnlocked) {
+        // User returned and ad isn't unlocked yet
+        setIsViewing(true);
+        setTimeLeft(3);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [hasVisitedAd, isUnlocked]);
 
   // Timer effect
   useEffect(() => {
@@ -19,7 +39,8 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
     if (timeLeft === 0 && !isUnlocked) {
       onUnlock(id);
       setIsViewing(false);
-      setTimeLeft(3); // Reset timer for next attempt
+      setTimeLeft(3);
+      setHasVisitedAd(false);
     }
 
     return () => {
@@ -30,10 +51,7 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
   // Ad injection effect
   useEffect(() => {
     if (adContainerRef.current) {
-      // Clear any existing content
       adContainerRef.current.innerHTML = '';
-      
-      // Create and inject the ad script
       const script = document.createElement('script');
       script.textContent = adScript;
       adContainerRef.current.appendChild(script);
@@ -41,9 +59,17 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
   }, [adScript]);
 
   const handleClick = () => {
-    if (!isUnlocked) {
-      setIsViewing(true);
+    if (!isUnlocked && !hasVisitedAd) {
+      // Reset states when clicking a new ad
+      setIsViewing(false);
       setTimeLeft(3);
+      setHasVisitedAd(false);
+      
+      // Create a clickable area that opens in a new tab
+      const a = document.createElement('a');
+      a.href = 'https://example.com'; // Replace with actual ad URL
+      a.target = '_blank';
+      a.click();
     }
   };
 
@@ -80,8 +106,10 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
           "Ad completed"
         ) : isViewing ? (
           "Watching ad..."
+        ) : hasVisitedAd ? (
+          "Welcome back! Wait for timer..."
         ) : (
-          "Click to watch ad"
+          "Click to visit ad"
         )}
       </div>
     </div>
