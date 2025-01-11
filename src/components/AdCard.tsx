@@ -8,43 +8,37 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
   const [hasVisitedAd, setHasVisitedAd] = useState(false);
   const adContainerRef = useRef<HTMLDivElement>(null);
   const scriptRef = useRef<HTMLScriptElement | null>(null);
-  const currentAdRef = useRef<number | null>(null);
 
   // Handle visibility change
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden && currentAdRef.current === id) {
+      if (document.hidden) {
         setHasVisitedAd(true);
-      } else if (!document.hidden && hasVisitedAd && !isUnlocked && currentAdRef.current === id) {
+      } else if (!document.hidden && hasVisitedAd && !isUnlocked) {
         setIsViewing(true);
-        setTimeLeft(3);
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (currentAdRef.current === id) {
-        currentAdRef.current = null;
-      }
     };
-  }, [hasVisitedAd, isUnlocked, id]);
+  }, [hasVisitedAd, isUnlocked]);
 
   // Timer effect
   useEffect(() => {
     let timer: number;
-    if (isViewing && !isUnlocked && timeLeft > 0 && currentAdRef.current === id) {
+    if (isViewing && !isUnlocked && timeLeft > 0) {
       timer = window.setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
     }
 
-    if (timeLeft === 0 && !isUnlocked && currentAdRef.current === id) {
+    if (timeLeft === 0 && !isUnlocked) {
       onUnlock(id);
       setIsViewing(false);
       setTimeLeft(3);
       setHasVisitedAd(false);
-      currentAdRef.current = null;
     }
 
     return () => {
@@ -91,10 +85,8 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
 
   const handleClick = () => {
     if (!isUnlocked && !hasVisitedAd) {
-      setIsViewing(false);
       setTimeLeft(3);
-      setHasVisitedAd(false);
-      currentAdRef.current = id;
+      setIsViewing(false);
       
       try {
         window.open('https://example.com', '_blank')?.focus();
@@ -123,7 +115,7 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
       <div className="aspect-video bg-white/5 rounded-lg flex items-center justify-center">
         <div className="relative w-full h-full">
           <div ref={adContainerRef} className="absolute inset-0" />
-          {!isUnlocked && isViewing && currentAdRef.current === id && (
+          {!isUnlocked && isViewing && (
             <div className="absolute inset-0 flex flex-col items-center justify-center space-y-2 bg-black/50">
               <Timer className="w-8 h-8 text-white animate-pulse" />
               <p className="text-white">Wait {timeLeft}s...</p>
@@ -135,9 +127,9 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
       <div className="mt-4 text-sm text-white/80">
         {isUnlocked ? (
           "Ad completed"
-        ) : isViewing && currentAdRef.current === id ? (
+        ) : isViewing ? (
           "Watching ad..."
-        ) : hasVisitedAd && currentAdRef.current === id ? (
+        ) : hasVisitedAd ? (
           "Welcome back! Wait for timer..."
         ) : (
           "Click to visit ad"
