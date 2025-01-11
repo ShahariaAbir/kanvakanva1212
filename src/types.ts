@@ -1,5 +1,6 @@
 export interface AdCard {
   id: number;
+  name: string;
   isUnlocked: boolean;
   title: string;
   adScript: string;
