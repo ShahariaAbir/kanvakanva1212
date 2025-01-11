@@ -2,22 +2,29 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Lock, Unlock, CheckCircle, Timer } from 'lucide-react';
 import { AdCardProps } from '../types';
 
-export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProps) {
+export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCardProps) {
   const [isViewing, setIsViewing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3);
-  const [hasVisitedAd, setHasVisitedAd] = useState(false);
   const adContainerRef = useRef<HTMLDivElement>(null);
-  const scriptRef = useRef<HTMLScriptElement | null>(null);
-  const adIdRef = useRef<number | null>(null);
+  const timerRef = useRef<number | null>(null);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, []);
 
   // Handle visibility change
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden && adIdRef.current === id) {
-        setHasVisitedAd(true);
-      } else if (!document.hidden && hasVisitedAd && !isUnlocked && adIdRef.current === id) {
+      const storedAdName = sessionStorage.getItem('currentAd');
+      
+      if (!document.hidden && storedAdName === name && !isUnlocked) {
         setIsViewing(true);
-        adIdRef.current = null;
+        startTimer();
       }
     };
 
@@ -25,63 +32,34 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [hasVisitedAd, isUnlocked, id]);
+  }, [name, isUnlocked]);
 
-  // Timer effect
-  useEffect(() => {
-    let timer: number;
-    if (isViewing && !isUnlocked && timeLeft > 0) {
-      timer = window.setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
+  const startTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
     }
 
-    if (timeLeft === 0 && !isUnlocked) {
-      onUnlock(id);
-      setIsViewing(false);
-      setTimeLeft(3);
-      setHasVisitedAd(false);
-      adIdRef.current = null;
-    }
-
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [isViewing, timeLeft, isUnlocked, id, onUnlock]);
-
-  // Ad injection effect
-  useEffect(() => {
-    if (!adContainerRef.current) return;
-
-    try {
-      if (scriptRef.current) {
-        scriptRef.current.remove();
-      }
-
-      adContainerRef.current.innerHTML = '';
-      
-      const script = document.createElement('script');
-      script.textContent = adScript;
-      script.async = true;
-      
-      scriptRef.current = script;
-      adContainerRef.current.appendChild(script);
-    } catch (error) {
-      console.error('Error injecting ad script:', error);
-    }
-  }, [adScript]);
+    setTimeLeft(3);
+    timerRef.current = window.setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+          }
+          onUnlock(id);
+          setIsViewing(false);
+          sessionStorage.removeItem('currentAd');
+          return 3;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const handleClick = () => {
     if (!isUnlocked && !isViewing) {
-      setTimeLeft(3);
-      setIsViewing(false);
-      adIdRef.current = id;
-      
-      try {
-        window.open('https://example.com', '_blank')?.focus();
-      } catch (error) {
-        console.error('Error opening ad link:', error);
-      }
+      sessionStorage.setItem('currentAd', name);
+      window.open('https://example.com', '_blank')?.focus();
     }
   };
 
@@ -118,8 +96,6 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
           "Ad completed"
         ) : isViewing ? (
           "Watching ad..."
-        ) : hasVisitedAd ? (
-          "Welcome back! Wait for timer..."
         ) : (
           "Click to visit ad"
         )}
