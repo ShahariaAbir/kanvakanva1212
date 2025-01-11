@@ -3,7 +3,7 @@ import { Lock, Unlock, CheckCircle, Timer } from 'lucide-react';
 import { AdCardProps } from '../types';
 
 export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProps) {
-  const [isViewing, setIsViewing] = useState(true); // Changed to true by default
+  const [isViewing, setIsViewing] = useState(false); // Changed to false by default
   const [timeLeft, setTimeLeft] = useState(3);
   const adContainerRef = useRef<HTMLDivElement>(null);
 
@@ -19,6 +19,7 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
     if (timeLeft === 0 && !isUnlocked) {
       onUnlock(id);
       setIsViewing(false);
+      setTimeLeft(3); // Reset timer for next attempt
     }
 
     return () => {
@@ -37,7 +38,7 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
       script.textContent = adScript;
       adContainerRef.current.appendChild(script);
     }
-  }, [adScript]); // Only depends on adScript now, since we show ads immediately
+  }, [adScript]);
 
   const handleClick = () => {
     if (!isUnlocked) {
@@ -48,7 +49,7 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
 
   return (
     <div 
-      className="relative overflow-hidden rounded-xl backdrop-blur-md bg-white/10 p-6 shadow-xl border border-white/20 transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]"
+      className="relative overflow-hidden rounded-xl backdrop-blur-md bg-white/10 p-6 shadow-xl border border-white/20 transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] cursor-pointer"
       onClick={handleClick}
     >
       <div className="flex items-center justify-between mb-4">
@@ -75,7 +76,13 @@ export function AdCard({ id, isUnlocked, title, adScript, onUnlock }: AdCardProp
       </div>
 
       <div className="mt-4 text-sm text-white/80">
-        {isUnlocked ? "Ad completed" : "Watch ad to unlock"}
+        {isUnlocked ? (
+          "Ad completed"
+        ) : isViewing ? (
+          "Watching ad..."
+        ) : (
+          "Click to watch ad"
+        )}
       </div>
     </div>
   );
