@@ -40,6 +40,12 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
       if (!document.hidden && storedAdName === name && !isUnlocked) {
         setIsViewing(true);
         startTimer();
+      } else if (document.hidden && storedAdName === name) {
+        // Clear timer when tab is hidden
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
+        setIsViewing(false);
       }
     };
 
@@ -74,6 +80,10 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
   const handleClick = () => {
     if (!isUnlocked && !isViewing) {
       sessionStorage.setItem('currentAd', name);
+      // Start the timer immediately when clicked
+      setIsViewing(true);
+      startTimer();
+      // Open in new tab
       window.open('https://example.com', '_blank')?.focus();
     }
   };
