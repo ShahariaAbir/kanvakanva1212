@@ -17,64 +17,56 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
     };
   }, []);
 
+  // Handle visibility change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const storedAdName = sessionStorage.getItem('currentAd');
+      
+      if (!document.hidden && storedAdName === name && !isUnlocked) {
+        setIsViewing(true);
+        startTimer();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [name, isUnlocked]);
+
   const startTimer = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
 
-    setIsViewing(true);
     setTimeLeft(3);
-    
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
-        const newTime = prev - 1;
-        if (newTime <= 0) {
+        if (prev <= 1) {
           if (timerRef.current) {
             clearInterval(timerRef.current);
           }
-          // Call onUnlock here to ensure it's called
           onUnlock(id);
           setIsViewing(false);
           sessionStorage.removeItem('currentAd');
-          return 0;
+          return 3;
         }
-        return newTime;
+        return prev - 1;
       });
     }, 1000);
   };
 
-  // Initialize ad in the container
-  useEffect(() => {
-    if (adContainerRef.current && !isUnlocked) {
-      const container = adContainerRef.current;
-      container.innerHTML = ''; // Clear previous content
-      
-      // Create a script element
-      const script = document.createElement('script');
-      script.textContent = adScript;
-      
-      // Add click handler to container
-      const handleAdClick = (e: MouseEvent) => {
-        e.stopPropagation(); // Prevent card click
-        if (!isUnlocked && !isViewing) {
-          startTimer();
-          sessionStorage.setItem('currentAd', name);
-          window.open('https://example.com', '_blank')?.focus();
-        }
-      };
-      
-      container.onclick = handleAdClick;
-      container.appendChild(script);
-
-      return () => {
-        container.onclick = null;
-      };
+  const handleClick = () => {
+    if (!isUnlocked && !isViewing) {
+      sessionStorage.setItem('currentAd', name);
+      window.open('https://example.com', '_blank')?.focus();
     }
-  }, [adScript, isUnlocked, isViewing, name, id, onUnlock]);
+  };
 
   return (
     <div 
-      className="relative overflow-hidden rounded-xl backdrop-blur-md bg-white/10 p-6 shadow-xl border border-white/20 transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]"
+      className="relative overflow-hidden rounded-xl backdrop-blur-md bg-white/10 p-6 shadow-xl border border-white/20 transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] cursor-pointer"
+      onClick={handleClick}
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-semibold text-white">{title}</h3>
@@ -87,7 +79,7 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
         </div>
       </div>
 
-      <div className="aspect-video bg-white/5 rounded-lg flex items-center justify-center cursor-pointer">
+      <div className="aspect-video bg-white/5 rounded-lg flex items-center justify-center">
         <div className="relative w-full h-full">
           <div ref={adContainerRef} className="absolute inset-0" />
           {!isUnlocked && isViewing && (
@@ -105,7 +97,7 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
         ) : isViewing ? (
           "Watching ad..."
         ) : (
-          "Click the ad to continue"
+          "Click to visit ad"
         )}
       </div>
     </div>
