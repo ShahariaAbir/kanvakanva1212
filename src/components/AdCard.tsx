@@ -138,7 +138,7 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
             {isUnlocked ? (
               "Ad completed"
             ) : isViewing ? (
-              "Watching ad..."
+              "Completing ad..."
             ) : (
               "Click to visit ad"
             )}
