@@ -2,12 +2,32 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Lock, Unlock, CheckCircle, Timer, XCircle } from 'lucide-react';
 import { AdCardProps } from '../types';
 
+// Add cache expiration check
+const checkAndClearExpiredCache = () => {
+  const lastRefreshTime = sessionStorage.getItem('lastRefreshTime');
+  const currentTime = Date.now();
+
+  if (lastRefreshTime) {
+    const timeDiff = currentTime - parseInt(lastRefreshTime);
+    if (timeDiff > 20000) { // 20 seconds
+      sessionStorage.clear(); // Clear all session storage data
+    }
+  }
+  
+  sessionStorage.setItem('lastRefreshTime', currentTime.toString());
+};
+
 export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCardProps) {
   const [isViewing, setIsViewing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3);
   const [error, setError] = useState<string | null>(null);
   const adContainerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
+
+  // Check cache expiration on component mount
+  useEffect(() => {
+    checkAndClearExpiredCache();
+  }, []);
 
   // Cleanup timer on unmount
   useEffect(() => {
