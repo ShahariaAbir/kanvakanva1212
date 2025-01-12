@@ -58,11 +58,11 @@ l.parentNode.insertBefore(s, l);
 ];
 
 const AD_NAMES = [
-  "Click Here",
-  "Click Here",
-  "Click Here",
-  "Click Here",
-  "Click Here"
+  "1.Click Here",
+  "2.Click Here",
+  "3.Click Here",
+  "4.Click Here",
+  "5.Click Here"
 ];
 
 function App() {
