@@ -24,18 +24,21 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
 
     setIsViewing(true);
     setTimeLeft(3);
+    
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) {
+        const newTime = prev - 1;
+        if (newTime <= 0) {
           if (timerRef.current) {
             clearInterval(timerRef.current);
           }
+          // Call onUnlock here to ensure it's called
           onUnlock(id);
           setIsViewing(false);
           sessionStorage.removeItem('currentAd');
-          return 3;
+          return 0;
         }
-        return prev - 1;
+        return newTime;
       });
     }, 1000);
   };
@@ -51,20 +54,23 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
       script.textContent = adScript;
       
       // Add click handler to container
-      container.onclick = (e) => {
+      const handleAdClick = (e: MouseEvent) => {
         e.stopPropagation(); // Prevent card click
         if (!isUnlocked && !isViewing) {
-          // Start timer immediately when ad is clicked
           startTimer();
           sessionStorage.setItem('currentAd', name);
           window.open('https://example.com', '_blank')?.focus();
         }
       };
       
-      // Append script to container
+      container.onclick = handleAdClick;
       container.appendChild(script);
+
+      return () => {
+        container.onclick = null;
+      };
     }
-  }, [adScript, isUnlocked, isViewing, name]);
+  }, [adScript, isUnlocked, isViewing, name, id, onUnlock]);
 
   return (
     <div 
