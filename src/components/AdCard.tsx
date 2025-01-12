@@ -8,23 +8,6 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
   const adContainerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
 
-  // Handle visibility change
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      const storedAdName = sessionStorage.getItem('currentAd');
-      
-      if (!document.hidden && storedAdName === name && !isUnlocked) {
-        setIsViewing(true);
-        startTimer();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [name, isUnlocked]);
-
   // Cleanup timer on unmount
   useEffect(() => {
     return () => {
@@ -34,35 +17,12 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
     };
   }, []);
 
-  // Initialize ad in the container
-  useEffect(() => {
-    if (adContainerRef.current && !isUnlocked) {
-      const container = adContainerRef.current;
-      container.innerHTML = ''; // Clear previous content
-      
-      // Create a script element
-      const script = document.createElement('script');
-      script.textContent = adScript;
-      
-      // Add click handler to container
-      container.onclick = (e) => {
-        e.stopPropagation(); // Prevent card click
-        if (!isUnlocked && !isViewing) {
-          sessionStorage.setItem('currentAd', name);
-          window.open('https://example.com', '_blank')?.focus();
-        }
-      };
-      
-      // Append script to container
-      container.appendChild(script);
-    }
-  }, [adScript, isUnlocked, isViewing, name]);
-
   const startTimer = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
 
+    setIsViewing(true);
     setTimeLeft(3);
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
@@ -79,6 +39,32 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
       });
     }, 1000);
   };
+
+  // Initialize ad in the container
+  useEffect(() => {
+    if (adContainerRef.current && !isUnlocked) {
+      const container = adContainerRef.current;
+      container.innerHTML = ''; // Clear previous content
+      
+      // Create a script element
+      const script = document.createElement('script');
+      script.textContent = adScript;
+      
+      // Add click handler to container
+      container.onclick = (e) => {
+        e.stopPropagation(); // Prevent card click
+        if (!isUnlocked && !isViewing) {
+          // Start timer immediately when ad is clicked
+          startTimer();
+          sessionStorage.setItem('currentAd', name);
+          window.open('https://example.com', '_blank')?.focus();
+        }
+      };
+      
+      // Append script to container
+      container.appendChild(script);
+    }
+  }, [adScript, isUnlocked, isViewing, name]);
 
   return (
     <div 
