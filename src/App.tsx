@@ -58,11 +58,11 @@ l.parentNode.insertBefore(s, l);
 ];
 
 const AD_NAMES = [
-  "Premium Gaming Offer",
-  "Special Travel Deals",
-  "Exclusive Shopping Discounts",
-  "Limited Time Tech Deals",
-  "VIP Entertainment Access"
+  "Click Here",
+  "Click Here",
+  "Click Here",
+  "Click Here",
+  "Click Here"
 ];
 
 function App() {
@@ -91,7 +91,7 @@ function App() {
 
   const handleFinalButtonClick = () => {
     if (allUnlocked) {
-      window.location.href = 'https://example.com';
+      window.location.href = 'https://youtube.com';
     }
   };
 
