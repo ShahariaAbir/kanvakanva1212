@@ -99,7 +99,7 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-blue-900">
       <div className="container mx-auto px-4 py-12">
         <h1 className="text-4xl font-bold text-white text-center mb-12">
-          Interactive Ads
+          Complete 5 Ads to Unlock the main button
         </h1>
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto mb-12">
