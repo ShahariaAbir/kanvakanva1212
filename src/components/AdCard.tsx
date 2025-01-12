@@ -8,6 +8,21 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
   const adContainerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
 
+  // Inject ad script when component mounts
+  useEffect(() => {
+    if (adContainerRef.current && !isUnlocked) {
+      // Create a new script element
+      const scriptElement = document.createElement('script');
+      scriptElement.innerHTML = adScript;
+      
+      // Clear any existing content
+      adContainerRef.current.innerHTML = '';
+      
+      // Append the script
+      adContainerRef.current.appendChild(scriptElement);
+    }
+  }, [adScript, isUnlocked]);
+
   // Cleanup timer on unmount
   useEffect(() => {
     return () => {
