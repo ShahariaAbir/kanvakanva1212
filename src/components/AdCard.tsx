@@ -8,20 +8,19 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
   const adContainerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
 
-  // Inject ad script when component mounts
+  // Listen for messages from the ad window
   useEffect(() => {
-    if (adContainerRef.current && !isUnlocked) {
-      // Create a new script element
-      const scriptElement = document.createElement('script');
-      scriptElement.innerHTML = adScript;
-      
-      // Clear any existing content
-      adContainerRef.current.innerHTML = '';
-      
-      // Append the script
-      adContainerRef.current.appendChild(scriptElement);
-    }
-  }, [adScript, isUnlocked]);
+    const handleMessage = (event: MessageEvent) => {
+      // Verify the message is from our ad
+      if (event.data === `ad_clicked_${name}`) {
+        setIsViewing(true);
+        startTimer();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [name]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -31,29 +30,6 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
       }
     };
   }, []);
-
-  // Handle visibility change
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      const storedAdName = sessionStorage.getItem('currentAd');
-      
-      if (!document.hidden && storedAdName === name && !isUnlocked) {
-        setIsViewing(true);
-        startTimer();
-      } else if (document.hidden && storedAdName === name) {
-        // Clear timer when tab is hidden
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-        }
-        setIsViewing(false);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [name, isUnlocked]);
 
   const startTimer = () => {
     if (timerRef.current) {
@@ -80,11 +56,32 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
   const handleClick = () => {
     if (!isUnlocked && !isViewing) {
       sessionStorage.setItem('currentAd', name);
-      // Start the timer immediately when clicked
-      setIsViewing(true);
-      startTimer();
-      // Open in new tab
-      window.open('https://example.com', '_blank')?.focus();
+      
+      // Create a modified ad script that includes our message sender
+      const modifiedScript = `
+        ${adScript}
+        // Add click event listener to the document
+        document.addEventListener('click', function() {
+          // Send message to parent window
+          window.opener.postMessage('ad_clicked_${name}', '*');
+        });
+      `;
+      
+      // Open new window with the modified script
+      const newWindow = window.open('about:blank', '_blank');
+      if (newWindow) {
+        newWindow.document.write(`
+          <html>
+            <head>
+              <title>${title}</title>
+            </head>
+            <body>
+              <script>${modifiedScript}</script>
+            </body>
+          </html>
+        `);
+        newWindow.document.close();
+      }
     }
   };
 
@@ -106,7 +103,6 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
 
       <div className="aspect-video bg-white/5 rounded-lg flex items-center justify-center">
         <div className="relative w-full h-full">
-          <div ref={adContainerRef} className="absolute inset-0" />
           {!isUnlocked && isViewing && (
             <div className="absolute inset-0 flex flex-col items-center justify-center space-y-2 bg-black/50">
               <Timer className="w-8 h-8 text-white animate-pulse" />
