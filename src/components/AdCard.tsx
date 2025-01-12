@@ -59,7 +59,7 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
   const handleClick = () => {
     if (!isUnlocked && !isViewing) {
       sessionStorage.setItem('currentAd', name);
-      window.open('https://example.com', '_blank')?.focus();
+      window.open('https://sentimental-glad.com/b/3AV.0YPN3upUvHbJmoVUJ/Z/DQ0J2DMZDXA/5/OdDGEl2xLUT/YXwkMGDTks4tMQT/cD', '_blank')?.focus();
     }
   };
 
