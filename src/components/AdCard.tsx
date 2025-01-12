@@ -8,19 +8,22 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
   const adContainerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
 
-  // Listen for messages from the ad window
+  // Handle visibility change
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      // Verify the message is from our ad
-      if (event.data === `ad_clicked_${name}`) {
+    const handleVisibilityChange = () => {
+      const storedAdName = sessionStorage.getItem('currentAd');
+      
+      if (!document.hidden && storedAdName === name && !isUnlocked) {
         setIsViewing(true);
         startTimer();
       }
     };
 
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [name]);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [name, isUnlocked]);
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -30,6 +33,30 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
       }
     };
   }, []);
+
+  // Initialize ad in the container
+  useEffect(() => {
+    if (adContainerRef.current && !isUnlocked) {
+      const container = adContainerRef.current;
+      container.innerHTML = ''; // Clear previous content
+      
+      // Create a script element
+      const script = document.createElement('script');
+      script.textContent = adScript;
+      
+      // Add click handler to container
+      container.onclick = (e) => {
+        e.stopPropagation(); // Prevent card click
+        if (!isUnlocked && !isViewing) {
+          sessionStorage.setItem('currentAd', name);
+          window.open('https://example.com', '_blank')?.focus();
+        }
+      };
+      
+      // Append script to container
+      container.appendChild(script);
+    }
+  }, [adScript, isUnlocked, isViewing, name]);
 
   const startTimer = () => {
     if (timerRef.current) {
@@ -53,42 +80,9 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
     }, 1000);
   };
 
-  const handleClick = () => {
-    if (!isUnlocked && !isViewing) {
-      sessionStorage.setItem('currentAd', name);
-      
-      // Create a modified ad script that includes our message sender
-      const modifiedScript = `
-        ${adScript}
-        // Add click event listener to the document
-        document.addEventListener('click', function() {
-          // Send message to parent window
-          window.opener.postMessage('ad_clicked_${name}', '*');
-        });
-      `;
-      
-      // Open new window with the modified script
-      const newWindow = window.open('about:blank', '_blank');
-      if (newWindow) {
-        newWindow.document.write(`
-          <html>
-            <head>
-              <title>${title}</title>
-            </head>
-            <body>
-              <script>${modifiedScript}</script>
-            </body>
-          </html>
-        `);
-        newWindow.document.close();
-      }
-    }
-  };
-
   return (
     <div 
-      className="relative overflow-hidden rounded-xl backdrop-blur-md bg-white/10 p-6 shadow-xl border border-white/20 transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] cursor-pointer"
-      onClick={handleClick}
+      className="relative overflow-hidden rounded-xl backdrop-blur-md bg-white/10 p-6 shadow-xl border border-white/20 transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]"
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-semibold text-white">{title}</h3>
@@ -101,8 +95,9 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
         </div>
       </div>
 
-      <div className="aspect-video bg-white/5 rounded-lg flex items-center justify-center">
+      <div className="aspect-video bg-white/5 rounded-lg flex items-center justify-center cursor-pointer">
         <div className="relative w-full h-full">
+          <div ref={adContainerRef} className="absolute inset-0" />
           {!isUnlocked && isViewing && (
             <div className="absolute inset-0 flex flex-col items-center justify-center space-y-2 bg-black/50">
               <Timer className="w-8 h-8 text-white animate-pulse" />
@@ -118,7 +113,7 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
         ) : isViewing ? (
           "Watching ad..."
         ) : (
-          "Click to visit ad"
+          "Click the ad to continue"
         )}
       </div>
     </div>
