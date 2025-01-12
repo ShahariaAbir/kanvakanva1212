@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Lock, Unlock, CheckCircle, Timer } from 'lucide-react';
+import { Lock, Unlock, CheckCircle, Timer, XCircle } from 'lucide-react';
 import { AdCardProps } from '../types';
 
 export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCardProps) {
   const [isViewing, setIsViewing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3);
+  const [error, setError] = useState<string | null>(null);
   const adContainerRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<number | null>(null);
 
@@ -21,10 +22,21 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
   useEffect(() => {
     const handleVisibilityChange = () => {
       const storedAdName = sessionStorage.getItem('currentAd');
+      const adStartTime = sessionStorage.getItem('adStartTime');
       
       if (!document.hidden && storedAdName === name && !isUnlocked) {
-        setIsViewing(true);
-        startTimer();
+        // Check if enough time has passed (5-6 seconds)
+        if (adStartTime) {
+          const timeSpent = Date.now() - parseInt(adStartTime);
+          if (timeSpent >= 5000) { // 5 seconds minimum
+            setIsViewing(true);
+            startTimer();
+          } else {
+            setError('Please view the ad for at least 5 seconds');
+            sessionStorage.removeItem('currentAd');
+            sessionStorage.removeItem('adStartTime');
+          }
+        }
       }
     };
 
@@ -48,7 +60,9 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
           }
           onUnlock(id);
           setIsViewing(false);
+          setError(null);
           sessionStorage.removeItem('currentAd');
+          sessionStorage.removeItem('adStartTime');
           return 3;
         }
         return prev - 1;
@@ -58,7 +72,9 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
 
   const handleClick = () => {
     if (!isUnlocked && !isViewing) {
+      setError(null);
       sessionStorage.setItem('currentAd', name);
+      sessionStorage.setItem('adStartTime', Date.now().toString());
       window.open('https://sentimental-glad.com/b/3AV.0YPN3upUvHbJmoVUJ/Z/DQ0J2DMZDXA/5/OdDGEl2xLUT/YXwkMGDTks4tMQT/cD', '_blank')?.focus();
     }
   };
@@ -91,13 +107,22 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
         </div>
       </div>
 
-      <div className="mt-4 text-sm text-white/80">
-        {isUnlocked ? (
-          "Ad completed"
-        ) : isViewing ? (
-          "Watching ad..."
+      <div className="mt-4 text-sm">
+        {error ? (
+          <div className="flex items-center space-x-2 text-red-400">
+            <XCircle className="w-4 h-4" />
+            <span>{error}</span>
+          </div>
         ) : (
-          "Click to visit ad"
+          <span className="text-white/80">
+            {isUnlocked ? (
+              "Ad completed"
+            ) : isViewing ? (
+              "Watching ad..."
+            ) : (
+              "Click to visit ad"
+            )}
+          </span>
         )}
       </div>
     </div>
