@@ -65,6 +65,14 @@ const AD_NAMES = [
   "5.Click Here"
 ];
 
+const AD_URLS = [
+  "https://ex1.com",
+  "https://ex2.com",
+  "https://ex3.com",
+  "https://ex4.com",
+  "https://ex5.com"
+];
+
 function App() {
   const [ads, setAds] = useState<AdCardType[]>(() => {
     const saved = localStorage.getItem('adStates');
@@ -73,7 +81,8 @@ function App() {
       name: AD_NAMES[i],
       isUnlocked: false,
       title: AD_NAMES[i],
-      adScript: AD_SCRIPTS[i]
+      adScript: AD_SCRIPTS[i],
+      adUrl: AD_URLS[i]
     }));
   });
 
@@ -111,6 +120,7 @@ function App() {
               isUnlocked={ad.isUnlocked}
               title={ad.title}
               adScript={ad.adScript}
+              adUrl={ad.adUrl}
               onUnlock={handleUnlock}
             />
           ))}
