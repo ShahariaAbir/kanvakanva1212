@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Lock, Unlock, CheckCircle, Timer, XCircle } from 'lucide-react';
+import { Lock, CheckCircle, Timer, XCircle } from 'lucide-react';
 import { AdCardProps } from '../types';
 
 // Add cache expiration check
@@ -17,7 +17,7 @@ const checkAndClearExpiredCache = () => {
   sessionStorage.setItem('lastRefreshTime', currentTime.toString());
 };
 
-export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCardProps) {
+export function AdCard({ id, name, isUnlocked, title, adScript, adUrl, onUnlock }: AdCardProps) {
   const [isViewing, setIsViewing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(3);
   const [error, setError] = useState<string | null>(null);
@@ -95,7 +95,7 @@ export function AdCard({ id, name, isUnlocked, title, adScript, onUnlock }: AdCa
       setError(null);
       sessionStorage.setItem('currentAd', name);
       sessionStorage.setItem('adStartTime', Date.now().toString());
-      window.open('https://sentimental-glad.com/b/3AV.0YPN3upUvHbJmoVUJ/Z/DQ0J2DMZDXA/5/OdDGEl2xLUT/YXwkMGDTks4tMQT/cD', '_blank')?.focus();
+      window.open(adUrl, '_blank')?.focus();
     }
   };
 
