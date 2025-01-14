@@ -66,11 +66,11 @@ const AD_NAMES = [
 ];
 
 const AD_URLS = [
-  "https://ex1.com",
-  "https://ex2.com",
-  "https://ex3.com",
-  "https://ex4.com",
-  "https://ex5.com"
+  "https://sentimental-glad.com/bC3_V/0.Pb3kpjvxbBmrVUJ/ZSDj0/2tMAD/ER1DNFjeQm3LLqTQYzwVMjTLU/2-N/DPgi",
+  "https://sentimental-glad.com/bN3FVB0gP.3upvv/bombVmJiZpDQ0P2IMND/Ex1-NUjPcx5aLITYYswMMYTnUt2JOPDkAv",
+  "https://sentimental-glad.com/b_3.VO0/Pe3bpPvmb/mRVqJCZIDe0l2pMZD/En1JNljdgR3IL-T_Yow/MCTnUK2ZOJDzge",
+  "https://sentimental-glad.com/b/3mVw0bP.3/prvHbImRVaJZZWDw0/2/M/DbET1DNOzeIS5/L/T_YBwUM/TXUo3dMtzAAR",
+  "https://sentimental-glad.com/bV3SVc0.PL3wprv_bbmgVfJ_ZsDf0E2jMCDBEU1hN/zCQ/1qLvTGYqwZMuT/Un3pNtDBY-"
 ];
 
 function App() {
