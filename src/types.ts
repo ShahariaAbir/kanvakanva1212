@@ -4,11 +4,11 @@ export interface AdCard {
   isUnlocked: boolean;
   title: string;
   adScript: string;
+  adUrl: string;
 }
 
-export interface AdCardProps extends Omit<AdCard, 'adScript'> {
+export interface AdCardProps extends AdCard {
   onUnlock: (id: number) => void;
-  adScript: string;
 }
 
 export interface FinalButtonProps {
