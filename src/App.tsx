@@ -66,7 +66,7 @@ const AD_NAMES = [
 ];
 
 const AD_URLS = [
-  "https://sentimental-glad.com/bC3_V/0.Pb3kpjvxbBmrVUJ/ZSDj0/2tMAD/ER1DNFjeQm3LLqTQYzwVMjTLU/2-N/DPgi",
+  "https://www.profitablecpmrate.com/p33nthwnbh?key=af87d96ae56539c0a3f91941c7ce4cf5",
   "https://sentimental-glad.com/bN3FVB0gP.3upvv/bombVmJiZpDQ0P2IMND/Ex1-NUjPcx5aLITYYswMMYTnUt2JOPDkAv",
   "https://sentimental-glad.com/b_3.VO0/Pe3bpPvmb/mRVqJCZIDe0l2pMZD/En1JNljdgR3IL-T_Yow/MCTnUK2ZOJDzge",
   "https://sentimental-glad.com/b/3mVw0bP.3/prvHbImRVaJZZWDw0/2/M/DbET1DNOzeIS5/L/T_YBwUM/TXUo3dMtzAAR",
